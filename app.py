@@ -14,7 +14,7 @@ DB_KNOWN_ATTACKS = {
     "soporte-tecnico.click": {"virus": "Spyware", "origin": "Sudeste Asiático"}
 }
 
-# 3. ESTILOS CSS (LIMPIEZA Y VISIBILIDAD)
+# 3. ESTILOS CSS (DISEÑO LIMPIO E INSIGNIAS VISIBLES)
 st.markdown("""
     <style>
     .main { background-color: #010409; color: #c9d1d9; font-family: 'Courier New', monospace; }
@@ -32,40 +32,41 @@ st.markdown("""
     div.stButton > button {
         background: linear-gradient(180deg, #00d4ff 0%, #1f6feb 100%);
         color: white; border: none; font-weight: bold; width: 100%; height: 45px;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
     }
 
-    /* CONTENEDOR INTEGRADO (SIN TÍTULO DE LOGROS) */
+    /* CONTENEDOR INFERIOR INTEGRADO */
     .maynor-footer {
         margin-top: 40px; padding: 25px; border-top: 1px solid #30363d;
         background: rgba(13, 17, 23, 0.8); border-radius: 12px;
         display: flex; justify-content: space-between; align-items: center;
     }
 
-    .badge-container { display: flex; gap: 15px; }
+    .badge-container { display: flex; gap: 12px; flex-wrap: nowrap; }
 
     .badge-card {
         background-color: #0d1117; border: 2px solid #30363d; border-radius: 10px;
-        padding: 15px; text-align: center; width: 140px;
-        transition: transform 0.2s;
+        padding: 12px; text-align: center; width: 135px;
+        transition: transform 0.2s, border-color 0.2s;
     }
 
     .badge-card:hover { transform: scale(1.05); border-color: #58a6ff; }
 
     .badge-icon { 
-        width: 60px; height: 60px; margin-bottom: 10px;
+        width: 55px; height: 55px; margin-bottom: 8px;
         filter: drop-shadow(0 0 8px rgba(88, 166, 255, 0.6));
     }
 
-    .badge-title { font-size: 0.85rem; font-weight: bold; color: #ffffff; }
-    .badge-date { font-size: 0.7rem; color: #58a6ff; font-family: monospace; margin-top: 5px; }
+    .badge-title { font-size: 0.8rem; font-weight: bold; color: #ffffff; margin: 0; }
+    .badge-date { font-size: 0.65rem; color: #58a6ff; font-family: monospace; margin-top: 4px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. ENCABEZADO
+# 4. ENCABEZADO TÁCTICO
 st.markdown("<h1 class='glow-header'>🛡️ ANTÍDOTO MX</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #8b949e; margin-top:-20px;'>TACTICAL HUB - BASE DE DATOS SENTINEL ACTIVA</p>", unsafe_allow_html=True)
 
-# 5. INTERFAZ TÁCTICA
+# 5. PANEL CENTRAL (RADAR Y CONSOLA)
 col_left, col_right = st.columns([1, 1.2])
 
 with col_left:
@@ -76,7 +77,7 @@ with col_left:
             @keyframes r { from {transform:rotate(0deg);} to {transform:rotate(360deg);} }
         </style>
         <div class="scan"></div>
-        <div style="position:absolute; bottom:10px; color:#00d4ff; font-family:monospace; font-size:11px;">DB STATUS: SYNCHRONIZED</div>
+        <div style="position:absolute; bottom:10px; color:#00d4ff; font-family:monospace; font-size:11px;">DB STATUS: SYNC | NODO: CDMX</div>
     </div>
     """
     components.html(radar_html, height=310)
@@ -87,12 +88,12 @@ with col_right:
     
     if st.button("🚀 INICIAR ESCANEO TÁCTICO", use_container_width=True):
         if target:
-            with st.status("Ejecutando Protocolo Antídoto...", expanded=True) as s:
-                st.write("📡 Consultando PhishTank...")
+            log_area = st.empty()
+            logs = ["[SYS] Accediendo a Base de Datos Sentinel..."]
+            for s in ["📡 Consultando PhishTank...", "🔬 Comparando firmas de virus...", "📂 Análisis Finalizado."]:
+                logs.append(f"[INF] {s}")
+                log_area.code("\n".join(logs), language="bash")
                 time.sleep(0.5)
-                st.write("🔬 Comparando firmas de virus...")
-                time.sleep(0.5)
-                s.update(label="Escaneo Finalizado", state="complete")
 
             is_malicious = target in DB_KNOWN_ATTACKS or any(ext in target.lower() for ext in DB_MALWARE_DOMAINS)
             
@@ -100,18 +101,18 @@ with col_right:
                 info = DB_KNOWN_ATTACKS.get(target, {"virus": "Heurística Detectada", "origin": "Proxy Externo"})
                 st.error(f"🚨 POSITIVO: {info['virus']} detectado desde {info['origin']}. Bloqueado automáticamente.")
             else:
-                st.success("✅ REPORTE: Objeto limpio.")
+                st.success("✅ REPORTE: Objeto limpio. No coincide con entradas maliciosas.")
 
 st.write("---")
 
-# 6. MÉTRICAS
+# 6. MÉTRICAS DEL SISTEMA
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Fiabilidad", "99.8%")
 m2.metric("Base de Datos", "+507k Firmas")
 m3.metric("Protección", "Activa 24/7")
 m4.metric("Uptime", "99.9%")
 
-# 7. FIRMA E INSIGNIAS (SIN EL TÍTULO DE LOGROS)
+# 7. PIE DE PÁGINA (FIRMA E INSIGNIAS SIN TÍTULOS EXTRA)
 st.markdown(f"""
     <div class="maynor-footer">
         <div>
