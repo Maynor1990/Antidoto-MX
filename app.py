@@ -1,156 +1,124 @@
 import streamlit as st
 import pandas as pd
-import requests
-import socket
 import time
 from annotated_text import annotated_text
 
-# =========================================================
-# 0. CONFIGURACIÓN Y ESTÉTICA "TACTICAL HUD" (OPCIÓN 3)
-# =========================================================
+# 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Antídoto MX | Tactical Hub", page_icon="🛡️", layout="wide")
 
-# CSS para forzar los colores y texturas de la imagen 3
+# 2. ESTILOS CSS AVANZADOS (Colores Cian y Textura Wireframe)
 st.markdown("""
     <style>
-    /* Fondo oscuro profundo */
     .main { background-color: #010409; color: #c9d1d9; font-family: 'Courier New', monospace; }
     
-    /* Contenedores con bordes finos estilo Wireframe */
+    /* Contenedores Estilo HUD */
     .stMetric, .stTabs, div[data-testid="stTable"], .log-container {
         background-color: #0d1117; border: 1px solid #30363d;
         border-radius: 4px; padding: 15px;
     }
 
-    /* Título con resplandor Cian */
+    /* Brillo Neón Cian para Títulos */
     .glow-header {
-        color: #58a6ff; text-align: center; text-shadow: 0 0 15px #58a6ff;
-        font-weight: 900; letter-spacing: 5px; margin-bottom: 10px;
+        color: #58a6ff; text-align: center; text-shadow: 0 0 20px #58a6ff;
+        font-weight: 900; letter-spacing: 5px; text-transform: uppercase;
     }
 
-    /* MAPA MUNDIAL CON TEXTURA DE REJILLA (WIREFRAME) */
-    .map-container {
+    /* MAPA CON REJILLA TÁCTICA */
+    .map-frame {
         width: 100%; height: 380px; background-color: #000;
         border: 1px solid #30363d; border-radius: 4px; position: relative;
         overflow: hidden;
-        /* Textura de líneas cian muy sutiles */
+        /* Rejilla cian */
         background-image: 
-            linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
-        background-size: 20px 20px;
+            linear-gradient(rgba(0, 212, 255, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 212, 255, 0.08) 1px, transparent 1px);
+        background-size: 25px 25px;
     }
-    
-    /* Puntos de amenaza Rojos Neón parpadeantes */
-    .threat-dot {
+
+    /* Puntos Rojos Neón (Threat Dots) */
+    .neon-dot {
         position: absolute; width: 10px; height: 10px;
         background-color: #ff0000; border-radius: 50%;
-        box-shadow: 0 0 15px #ff0000;
-        animation: pulseThreat 1.5s infinite;
-        z-index: 10;
+        box-shadow: 0 0 15px #ff0000, 0 0 5px #fff;
+        animation: blink 1.5s infinite;
     }
-    @keyframes pulseThreat { 
-        0% { box-shadow: 0 0 0 0px rgba(255, 0, 0, 0.7); } 
-        70% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); } 
-        100% { box-shadow: 0 0 0 0px rgba(255, 0, 0, 0); } 
-    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-    /* Botón Táctico Cian */
+    /* Botón de Acción Táctica */
     div.stButton > button {
-        background: linear-gradient(135deg, #00d4ff 0%, #1f6feb 100%);
+        background: linear-gradient(180deg, #00d4ff 0%, #1f6feb 100%);
         color: white; border: none; font-weight: bold;
         width: 100%; height: 45px; border-radius: 4px;
-        box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
     }
-
-    /* Tabla de servicios */
-    .status-critical { color: #ff7b72; font-weight: bold; }
-    .status-ok { color: #3fb950; }
     </style>
     """, unsafe_allow_html=True)
 
-# =========================================================
-# 1. ENCABEZADO Y MÉTRICAS (FILA SUPERIOR)
-# =========================================================
-st.markdown("<h1 class='glow-header'>🛡️ ANTÍDOTO MX | TACTICAL HUB</h1>", unsafe_allow_html=True)
+# 3. ENCABEZADO
+st.markdown("<h1 class='glow-header'>🛡️ Antídoto MX | Tactical Hub</h1>", unsafe_allow_html=True)
 
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-col_m1.metric("Fiabilidad del Motor", "99.8%", "ÓPTIMO")
-col_m2.metric("Base de Datos", "+500k IPs", "ACTUALIZADO")
-col_m3.metric("Protección Global", "Activa 24/7", "SECURE")
-col_m4.metric("Amenazas Hoy", "1,284", "↑ 12")
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Fiabilidad", "99.8%", "ÓPTIMO")
+m2.metric("Base de Datos", "+500k IPs", "ACTUALIZADO")
+m3.metric("Protección", "Activa 24/7", "SECURE")
+m4.metric("Amenazas Hoy", "1,284", "↑ 12")
 
 st.write("---")
 
-# =========================================================
-# 2. CUERPO PRINCIPAL (MAPA + CONSOLA)
-# =========================================================
+# 4. DASHBOARD PRINCIPAL
 col_left, col_right = st.columns([1.8, 1])
 
 with col_left:
-    st.markdown("🌐 **WORLD THREAT MAP (NET)** <span style='float:right; color:#3fb950; font-size:0.8rem;'>ESTADO DEL SISTEMA: OK</span>", unsafe_allow_html=True)
+    st.markdown("🌐 **WORLD THREAT MAP (NET)** <span style='float:right; color:#3fb950;'>ESTADO: OK</span>", unsafe_allow_html=True)
     
-    # Renderizado del Mapa con puntos (Corregido para que no se vea como texto)
+    # EL MAPA (Aquí es donde el HTML se renderiza correctamente)
     st.markdown("""
-    <div class="map-container">
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg'); background-size: cover; background-position: center;"></div>
+    <div class="map-frame">
+        <div style="position: absolute; width: 100%; height: 100%; opacity: 0.15; background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg'); background-size: cover;"></div>
         
-        <div class="threat-dot" style="top: 25%; left: 70%;"></div>
-        <div class="threat-dot" style="top: 40%; left: 25%;"></div>
-        <div class="threat-dot" style="top: 55%; left: 80%;"></div>
-        <div class="threat-dot" style="top: 15%; left: 50%;"></div>
+        <div class="neon-dot" style="top: 25%; left: 70%;"></div>
+        <div class="neon-dot" style="top: 45%; left: 25%;"></div>
+        <div class="neon-dot" style="top: 60%; left: 85%;"></div>
+        <div class="neon-dot" style="top: 20%; left: 50%;"></div>
         
-        <caption style="position: absolute; bottom: 5px; left: 10px; color: #ff7b72; font-size: 0.7rem; font-weight: bold;">🔴 VECTORES DE ATAQUE DETECTADOS</caption>
+        <p style="position: absolute; bottom: 10px; left: 15px; color: #ff7b72; font-size: 0.75rem; font-weight: bold;">🔴 VECTORES DE ATAQUE DETECTADOS EN TIEMPO REAL</p>
     </div>
     """, unsafe_allow_html=True)
     
     st.write("")
     st.markdown("🚦 **SERVICIOS BAJO ATAQUE (MÉXICO)**")
-    
-    # Tabla de servicios integrada (Mapeo que hicimos)
-    servicios = {
-        "Servicio": ["Portal CFE (Phishing)", "SAT (SQL Injection)", "Servidor Nómina MX", "SPEI Gateway"],
-        "País Origen": ["Rusia", "China", "EE.UU.", "Rumania"],
+    servicios_df = pd.DataFrame({
+        "Servicio": ["Portal CFE", "SAT Inyección", "Nómina MX", "SPEI Gateway"],
+        "Origen": ["Rusia", "China", "EE.UU.", "Rumania"],
         "Estado": ["🔴 CRÍTICO", "🟡 ADVERTENCIA", "🟢 BLOQUEADO", "🔵 MONITOREO"]
-    }
-    st.table(pd.DataFrame(servicios))
+    })
+    st.table(servicios_df)
 
 with col_right:
     st.markdown("🛠️ **CONSOLA DE ACCIÓN**")
-    tabs = st.tabs(["🔗 VERIFICAR LINK", "🖼️ IMÁGENES FORENSES"])
+    t1, t2 = st.tabs(["🔗 RASTREO URL", "🖼️ FORENSE"])
+    with t1:
+        st.text_input("URL:", placeholder="https://", label_visibility="collapsed")
+    with t2:
+        st.file_uploader("Evidencia:", label_visibility="collapsed")
     
-    with tabs[0]:
-        st.text_input("Ingresa URL para auditoría:", placeholder="https://", label_visibility="collapsed")
-    with tabs[1]:
-        st.file_uploader("Subir evidencia:", type=['jpg','png','jpeg'], label_visibility="collapsed")
-
-    if st.button("🚀 INICIAR PROTOCOLO ANTÍDOTO"):
-        with st.spinner("Ejecutando contramedidas..."):
-            time.sleep(1.5)
-            st.success("Análisis completado satisfactoriamente.")
+    st.button("🚀 EJECUTAR PROTOCOLO ANTÍDOTO")
 
     st.write("")
     st.markdown("📟 **LIVE EVENT LOG**")
     st.markdown("""
-    <div style="background-color: #000; border: 1px solid #333; padding: 10px; color: #3fb950; font-family: monospace; font-size: 0.8rem; height: 110px; overflow-y: auto;">
-        [SYS] Módulos tácticos cargados.<br>
+    <div style="background-color: #000; border: 1px solid #333; padding: 10px; color: #3fb950; font-family: monospace; font-size: 0.8rem; height: 120px; overflow-y: auto;">
+        [SYS] Inicializando módulos tácticos...<br>
         [NET] Nodo CDMX activo (192.168.1.XX)<br>
-        [SEC] Cortafuegos en modo interceptación.<br>
-        [INF] Base de datos de amenazas actualizada.<br>
-        [WRN] Intento de handshake bloqueado.
+        [SEC] Cortafuegos: Interceptación activa.<br>
+        [INF] Base de datos de amenazas sincronizada.
     </div>
     """, unsafe_allow_html=True)
-    
-    st.write("")
-    st.markdown("💡 **CONSEJOS TÁCTICOS**")
-    st.caption("• Revisa siempre que el dominio termine en .com.mx oficial.")
-    st.caption("• No compartas capturas de pantalla con datos sensibles.")
 
-# =========================================================
-# 3. FOOTER (IDENTICO A IMAGEN)
-# =========================================================
+# 5. FOOTER
 st.write("---")
 f1, f2 = st.columns([1, 1])
 with f1:
-    annotated_text(("SISTEMA", "PROTEGIDO BY MAYNOR", "#238636"))
+    annotated_text(("SISTEMA", "PROTEGIDO BY MAYNOR", "#1f6feb"))
 with f2:
     st.markdown("<p style='text-align: right; color: #8b949e; font-size: 0.7rem;'>[ID SESIÓN: AMX-992-TX] [BY MAYNOR: Verified Specialist]</p>", unsafe_allow_html=True)
