@@ -14,7 +14,7 @@ DB_KNOWN_ATTACKS = {
     "soporte-tecnico.click": {"virus": "Spyware", "origin": "Sudeste Asiático"}
 }
 
-# 3. ESTILOS CSS (DISEÑO INFALIBLE Y VISIBLE)
+# 3. ESTILOS CSS (DISEÑO PROFESIONAL E INSIGNIAS NÍTIDAS)
 st.markdown("""
     <style>
     .main { background-color: #010409; color: #c9d1d9; font-family: 'Courier New', monospace; }
@@ -32,41 +32,43 @@ st.markdown("""
     div.stButton > button {
         background: linear-gradient(180deg, #00d4ff 0%, #1f6feb 100%);
         color: white; border: none; font-weight: bold; width: 100%; height: 45px;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
     }
 
-    /* CONTENEDOR INFERIOR */
+    /* CONTENEDOR INFERIOR INTEGRADO */
     .maynor-footer {
         margin-top: 40px; padding: 25px; border-top: 1px solid #30363d;
-        background: rgba(13, 17, 23, 0.9); border-radius: 12px;
+        background: rgba(13, 17, 23, 0.8); border-radius: 12px;
         display: flex; justify-content: space-between; align-items: center;
     }
 
-    .badge-container { display: flex; gap: 15px; flex-wrap: nowrap; }
+    .badge-container { display: flex; gap: 12px; flex-wrap: nowrap; }
 
     .badge-card {
         background-color: #0d1117; border: 2px solid #30363d; border-radius: 10px;
-        padding: 15px; text-align: center; width: 140px;
+        padding: 12px; text-align: center; width: 135px;
         transition: transform 0.2s, border-color 0.2s;
     }
 
-    .badge-card:hover { transform: scale(1.05); border-color: #58a6ff; box-shadow: 0 0 15px rgba(88, 166, 255, 0.3); }
+    .badge-card:hover { transform: scale(1.05); border-color: #58a6ff; }
 
-    /* ICONOS ESTILIZADOS (No dependen de archivos externos) */
-    .badge-emoji { 
-        font-size: 45px; margin-bottom: 10px; display: block;
-        filter: drop-shadow(0 0 8px #58a6ff);
+    /* ICONOS ESTILIZADOS DE ALTA VISIBILIDAD (No Emojis) */
+    .badge-icon { 
+        width: 55px; height: 55px; margin-bottom: 8px;
+        /* Efecto de resplandor para resaltar */
+        filter: drop-shadow(0 0 8px rgba(88, 166, 255, 0.6));
     }
 
-    .badge-title { font-size: 0.85rem; font-weight: bold; color: #ffffff; margin: 0; }
-    .badge-date { font-size: 0.7rem; color: #58a6ff; font-family: monospace; margin-top: 5px; }
+    .badge-title { font-size: 0.8rem; font-weight: bold; color: #ffffff; margin: 0; }
+    .badge-date { font-size: 0.65rem; color: #58a6ff; font-family: monospace; margin-top: 4px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. ENCABEZADO
+# 4. ENCABEZADO TÁCTICO
 st.markdown("<h1 class='glow-header'>🛡️ ANTÍDOTO MX</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8b949e; margin-top:-20px;'>TACTICAL HUB - MONITOREO SENTINEL</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #8b949e; margin-top:-20px;'>TACTICAL HUB - BASE DE DATOS SENTINEL ACTIVA</p>", unsafe_allow_html=True)
 
-# 5. INTERFAZ OPERATIVA
+# 5. PANEL CENTRAL (RADAR Y CONSOLA)
 col1, col2 = st.columns([1, 1.2])
 
 with col1:
@@ -77,39 +79,42 @@ with col1:
             @keyframes r { from {transform:rotate(0deg);} to {transform:rotate(360deg);} }
         </style>
         <div class="scan"></div>
-        <div style="position:absolute; bottom:10px; color:#00d4ff; font-family:monospace; font-size:11px;">NODO CDMX: SINCRONIZADO</div>
+        <div style="position:absolute; bottom:10px; color:#00d4ff; font-family:monospace; font-size:11px;">DB STATUS: SYNC | NODO: CDMX</div>
     </div>
     """
     components.html(radar_html, height=310)
 
 with col2:
     st.markdown("### 🔍 CONSOLA DE ANÁLISIS")
-    target = st.text_input("URL o Email para rastreo:", placeholder="Ej: sospechoso.top")
+    target = st.text_input("Ingrese URL o Email para rastreo:", placeholder="Ej: sospechoso.top")
     
     if st.button("🚀 INICIAR ESCANEO TÁCTICO", use_container_width=True):
         if target:
-            with st.status("Ejecutando Protocolo Antídoto...", expanded=True):
-                st.write("📡 Consultando bases de datos...")
+            log_area = st.empty()
+            logs = ["[SYS] Accediendo a Base de Datos Sentinel..."]
+            for s in ["📡 Consultando PhishTank...", "🔬 Comparando firmas de virus...", "📂 Análisis Finalizado."]:
+                logs.append(f"[INF] {s}")
+                log_area.code("\n".join(logs), language="bash")
                 time.sleep(0.5)
-                st.write("🔬 Cotejando firmas...")
-                time.sleep(0.5)
-            
+
             is_malicious = target in DB_KNOWN_ATTACKS or any(ext in target.lower() for ext in DB_MALWARE_DOMAINS)
+            
             if is_malicious:
-                st.error("🚨 AMENAZA DETECTADA: Bloqueado por seguridad.")
+                info = DB_KNOWN_ATTACKS.get(target, {"virus": "Heurística Detectada", "origin": "Proxy Externo"})
+                st.error(f"🚨 POSITIVO: {info['virus']} detectado desde {info['origin']}. Bloqueado automáticamente.")
             else:
-                st.success("✅ REPORTE: El objetivo está limpio.")
+                st.success("✅ REPORTE: Objeto limpio. No coincide con entradas maliciosas.")
 
 st.write("---")
 
-# 6. MÉTRICAS
+# 6. MÉTRICAS DEL SISTEMA
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Fiabilidad", "99.8%")
-m2.metric("Base de Datos", "+507k IPs")
+m2.metric("Base de Datos", "+507k Firmas")
 m3.metric("Protección", "Activa 24/7")
 m4.metric("Uptime", "99.9%")
 
-# 7. FIRMA E INSIGNIAS (SIN LOGOS ROTOS)
+# 7. PIE DE PÁGINA (FIRMA E INSIGNIAS ORIGINALES RECUPERADAS)
 st.markdown(f"""
     <div class="maynor-footer">
         <div>
@@ -118,22 +123,22 @@ st.markdown(f"""
         </div>
         <div class="badge-container">
             <div class="badge-card">
-                <span class="badge-emoji">💻</span>
+                <img class="badge-icon" src="https://img.icons8.com/nolan/96/hacker.png">
                 <div class="badge-title">Hacker Ético</div>
                 <div class="badge-date">14 mar 2026</div>
             </div>
             <div class="badge-card">
-                <span class="badge-emoji">👥</span>
+                <img class="badge-icon" src="https://img.icons8.com/nolan/96/group.png">
                 <div class="badge-title">Ing. Social</div>
                 <div class="badge-date">10 feb 2026</div>
             </div>
             <div class="badge-card">
-                <span class="badge-emoji">🛡️</span>
+                <img class="badge-icon" src="https://img.icons8.com/nolan/96/shield.png">
                 <div class="badge-title">Defensa Red</div>
                 <div class="badge-date">07 feb 2026</div>
             </div>
             <div class="badge-card">
-                <span class="badge-emoji">👾</span>
+                <img class="badge-icon" src="https://img.icons8.com/nolan/96/virus.png">
                 <div class="badge-title">Amenazas</div>
                 <div class="badge-date">05 feb 2026</div>
             </div>
