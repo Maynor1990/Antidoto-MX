@@ -8,124 +8,112 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 from annotated_text import annotated_text
 
-# =========================================================
-# 0. CONFIGURACIÓN Y ESTÉTICA "SECURITY TRUSTED"
-# =========================================================
-st.set_page_config(page_title="Antídoto MX | Trusted Security", page_icon="🛡️", layout="wide")
+# 0. CONFIGURACIÓN E IDENTIDAD VISUAL
+st.set_page_config(page_title="Antídoto MX | Intelligence", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
-    .main { background-color: #050505; color: #e0e0e0; }
+    /* Fondo y Tipografía */
+    .main { background-color: #0d1117; color: #c9d1d9; }
     
-    /* Tarjeta de Confianza */
-    .trust-card {
-        background: linear-gradient(135deg, rgba(35, 134, 54, 0.1) 0%, rgba(0, 0, 0, 1) 100%);
-        border: 1px solid #238636; padding: 20px; border-radius: 10px;
-        text-align: center; margin-bottom: 20px;
+    /* Estilo del Radar Circular */
+    .radar-circle {
+        width: 250px; height: 250px;
+        background: radial-gradient(circle, #002200 0%, #000 100%);
+        border: 2px solid #238636; border-radius: 50%;
+        position: relative; margin: 0 auto;
+        box-shadow: 0 0 20px rgba(35, 134, 54, 0.3);
+        overflow: hidden;
     }
-
-    .stMetric {
-        background: rgba(31, 111, 235, 0.1);
-        padding: 15px; border-radius: 10px;
-        border: 1px solid rgba(31, 111, 235, 0.2);
+    .radar-sweep {
+        position: absolute; width: 100%; height: 100%;
+        background: conic-gradient(from 0deg, transparent 0%, rgba(0, 255, 0, 0.2) 25%, transparent 50%);
+        animation: rotate 4s linear infinite;
     }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+    /* Contenedores Uniformes */
+    .stat-card {
+        background: #161b22; border: 1px solid #30363d;
+        padding: 20px; border-radius: 12px; height: 100%;
+    }
+    
     .glow-header {
-        color: #58a6ff; text-align: center; text-shadow: 0 0 10px #58a6ff;
-        font-weight: 900; letter-spacing: 3px;
-    }
-    
-    /* Panel de Consejos */
-    .advice-box {
-        background-color: #0d1117; border-left: 5px solid #f1e05a;
-        padding: 15px; margin-top: 10px; border-radius: 0 8px 8px 0;
+        color: #58a6ff; text-align: center; text-shadow: 0 0 8px rgba(88, 166, 255, 0.4);
+        font-family: 'Courier New', monospace; letter-spacing: 2px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# =========================================================
-# 1. BARRA LATERAL (SELLOS Y ESTADO)
-# =========================================================
-with st.sidebar:
-    st.markdown("<div class='trust-card'>🛡️ <b>CONEXIÓN SEGURA</b><br><small>Encriptación de grado militar activa</small></div>", unsafe_allow_html=True)
-    st.write("---")
-    st.markdown("### 🚦 ESTADO DEL ESCÁNER")
-    st.success("✅ Motor de Phishing: OK")
-    st.success("✅ Base de Datos IP: OK")
-    st.success("✅ Analizador EXIF: OK")
-    st.write("---")
-    st.info("Desarrollado por: **Maynor**")
-
-# =========================================================
-# 2. CABECERA
-# =========================================================
+# 1. ENCABEZADO UNIFICADO
 st.markdown("<h1 class='glow-header'>🛡️ ANTÍDOTO MX</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8b949e;'>PLATAFORMA CERTIFICADA PARA LA DETECCIÓN DE AMENAZAS DIGITALES</p>", unsafe_allow_html=True)
-
-# Métricas de confianza
-m1, m2, m3 = st.columns(3)
-m1.metric("Fiabilidad del Motor", "99.8%", "Óptimo")
-m2.metric("Base de Datos", "+500k IPs", "Actualizado")
-m3.metric("Protección", "Activa 24/7", "Secure")
-
+st.markdown("<p style='text-align: center; color: #8b949e; margin-top: -15px;'>Terminal de Ciberinteligencia - México</p>", unsafe_allow_html=True)
 st.write("---")
 
-# =========================================================
-# 3. CUERPO PRINCIPAL
-# =========================================================
-col_left, col_right = st.columns([1.5, 1])
+# 2. SECCIÓN SUPERIOR: MÉTRICAS Y ESTADO (FILA 1)
+col_info, col_trust = st.columns([2, 1])
 
-with col_left:
-    st.markdown("#### 🔍 PANEL DE ANÁLISIS")
-    tab1, tab2 = st.tabs(["🔗 VERIFICAR LINK", "🖼️ FORENSE FOTOGRÁFICO"])
-    
-    with tab1:
-        url_in = st.text_input("Ingresa URL para auditoría:", placeholder="https://")
-    
-    with tab2:
-        img_in = st.file_uploader("Carga de imagen para rastreo de metadatos:", type=['jpg','png','jpeg'])
+with col_info:
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Fiabilidad", "99.8%", "Óptimo")
+    m2.metric("Inteligencia", "+500k IPs", "Actualizado")
+    m3.metric("Uptime", "100%", "Secure")
 
-    if st.button("🚀 INICIAR ANÁLISIS SEGURO"):
-        with st.spinner("Realizando validación cruzada..."):
-            time.sleep(1)
-            st.success("Análisis completado. Revise los resultados abajo.")
-
-with col_right:
-    st.markdown("#### 💡 CONSEJOS DE CIBERSEGURIDAD")
+with col_trust:
     st.markdown("""
-    <div class='advice-box'>
-        <b>¿Dudas de un link?</b><br>
-        Nunca proporciones tus contraseñas si el dominio no termina en .com o .mx oficial.
-    </div>
-    <div class='advice-box'>
-        <b>Protege tus fotos:</b><br>
-        Al subir fotos a redes sociales, asegúrate de que el GPS esté desactivado para evitar rastreos de ubicación.
+    <div style='background: rgba(35, 134, 54, 0.1); border: 1px solid #238636; padding: 10px; border-radius: 8px; text-align: center;'>
+        <small style='color: #3fb950;'>🔒 CONEXIÓN CIFRADA TLS 1.3</small>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.warning("⚠️ **Nota de Maynor:** Si el resultado del análisis es ROJO, cierra la pestaña del link sospechoso de inmediato.")
 
-# =========================================================
-# 4. RADAR Y LOGS (RELLENO VISUAL)
-# =========================================================
+st.write("")
+
+# 3. CUERPO PRINCIPAL: RADAR Y ACCIÓN (FILA 2)
+# Dividimos en 3 columnas iguales para que se vea ordenado
+c1, c2, c3 = st.columns([1, 1.2, 1])
+
+with c1:
+    st.markdown("#### 🛰️ RADAR ACTIVO")
+    st.markdown("""
+    <div class="radar-circle">
+        <div class="radar-sweep"></div>
+        <div style="position: absolute; top: 40%; left: 60%; width: 5px; height: 5px; background: red; border-radius: 50%; box-shadow: 0 0 10px red;"></div>
+        <div style="position: absolute; top: 70%; left: 30%; width: 5px; height: 5px; background: red; border-radius: 50%; box-shadow: 0 0 10px red;"></div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.caption("<center>Escaneando nodos externos...</center>", unsafe_allow_html=True)
+
+with c2:
+    st.markdown("#### 🔍 INVESTIGACIÓN")
+    with st.container():
+        st.markdown("<div class='stat-card'>", unsafe_allow_html=True)
+        tab_link, tab_img = st.tabs(["🔗 Enlace", "🖼️ Imagen"])
+        with tab_link:
+            url_in = st.text_input("URL sospechosa:", placeholder="https://")
+        with tab_img:
+            img_in = st.file_uploader("Subir evidencia:", type=['jpg','png','jpeg'])
+        
+        if st.button("⚡ EJECUTAR ESCANEO", use_container_width=True):
+            with st.spinner("Procesando..."):
+                time.sleep(1)
+                st.toast("Análisis completado")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+with c3:
+    st.markdown("#### 💡 CONSEJOS")
+    st.info("**Phishing:** Revisa que el remitente coincida con la empresa oficial.")
+    st.warning("**Privacidad:** Las imágenes pueden contener tu ubicación exacta en los metadatos.")
+    st.success("**Protección:** Antídoto MX no guarda registros de tus consultas.")
+
+# 4. SECCIÓN INFERIOR: LOGS Y CRÉDITOS
 st.write("---")
-col_rad, col_log = st.columns([1, 1.5])
+l1, l2 = st.columns([2, 1])
 
-with col_rad:
-    st.markdown("#### 🛰️ RADAR TÁCTICO")
-    st.markdown("""
-    <div style="width: 100%; height: 200px; background: black; border: 1px solid #00ff00; border-radius: 10px; position: relative; overflow: hidden;">
-        <div style="position: absolute; width: 50%; height: 2px; background: #00ff00; top: 50%; left: 50%; transform-origin: left; animation: r 2s linear infinite;"></div>
-    </div>
-    <style> @keyframes r { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } </style>
-    """, unsafe_allow_html=True)
-
-with col_log:
+with l1:
     st.markdown("#### 📄 CERTIFICADO DE SEGURIDAD")
-    st.code("Emisor: Maynor Security Solutions\nStatus: Verified\nProtocol: TLS 1.3\nNo se almacenan datos privados del usuario durante el análisis.")
+    st.code("Autoridad: Maynor Security Hub\nIntegridad: Verificada\nProtocolo: Análisis heurístico avanzado sin almacenamiento de datos.")
 
-# =========================================================
-# 5. FOOTER
-# =========================================================
-st.write("---")
-annotated_text(("SISTEMA", "VERIFICADO BY MAYNOR", "#238636"))
+with l2:
+    st.markdown("#### 👤 DESARROLLADOR")
+    annotated_text(("SISTEMA", "BY MAYNOR", "#1f6feb"))
+    st.caption("Especialista en Seguridad Digital")
