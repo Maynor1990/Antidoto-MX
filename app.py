@@ -2,213 +2,141 @@ import streamlit as st
 import pandas as pd
 import requests
 import socket
-import re
 from datetime import datetime
-from difflib import SequenceMatcher
-from annotated_text import annotated_text
 from PIL import Image
 from PIL.ExifTags import TAGS
+from annotated_text import annotated_text
 
 # =========================================================
-# 0. CONFIGURACIÓN Y ESTILOS PROFESIONALES
+# 0. CONFIGURACIÓN Y ESTÉTICA "CYBER-TECH"
 # =========================================================
-st.set_page_config(page_title="Antídoto MX | Inteligencia Digital", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Antídoto MX | Security Hub", page_icon="🛡️", layout="wide")
 
-if 'historial' not in st.session_state:
-    st.session_state['historial'] = []
-
-# Estilo Dark Mode y Radar Animado
+# Estilo con CSS Avanzado (Glassmorphism & Neon)
 st.markdown("""
     <style>
-    .main { background-color: #010409; color: #c9d1d9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    h1 { color: #58a6ff; text-align: center; letter-spacing: 3px; text-shadow: 0 0 10px #58a6ff; }
-    h3, h4 { color: #a5d6ff; }
+    .main { background-color: #050505; color: #e0e0e0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     
-    .stButton>button { 
-        background: linear-gradient(45deg, #1f6feb, #388bfd); 
-        color: white; border: none; border-radius: 4px; font-weight: bold; width: 100%;
+    /* Efecto de Cristal para Contenedores */
+    div.stButton > button {
+        background: linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%);
+        color: white; border: none; border-radius: 5px; font-weight: 800;
+        padding: 15px; text-transform: uppercase; letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(0, 82, 212, 0.4); transition: 0.3s;
+    }
+    div.stButton > button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 82, 212, 0.6); }
+
+    /* Inputs Estilo Hacker */
+    .stTextInput>div>div>input, .stFileUploader section {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(88, 166, 255, 0.3) !important;
+        color: #58a6ff !important; border-radius: 8px !important;
     }
 
-    @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-
+    /* Animación del Radar Mejorada */
     .radar-container {
-        position: relative; width: 280px; height: 280px;
-        background-color: #000d00; border: 2px solid #00ff00;
-        border-radius: 50%; margin: 20px auto; overflow: hidden;
+        position: relative; width: 300px; height: 300px;
+        background: radial-gradient(circle, #001a00 0%, #000000 100%);
+        border: 2px solid #00ff00; border-radius: 50%;
+        margin: 20px auto; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2); overflow: hidden;
     }
     .radar-sweep {
-        position: absolute; width: 50%; height: 2px;
-        background: linear-gradient(to left, #00ff00, transparent);
-        top: 50%; left: 50%; transform-origin: 0% 50%;
-        animation: rotateRadar 2s linear infinite;
+        position: absolute; width: 50%; height: 100%;
+        background: linear-gradient(90deg, rgba(0, 255, 0, 0.3) 0%, transparent 100%);
+        top: 0; left: 50%; transform-origin: left center;
+        animation: rotateRadar 3s linear infinite;
     }
-    .radar-threat {
-        position: absolute; width: 8px; height: 8px;
-        background-color: #ff0000; border-radius: 50%;
-        animation: pulse 1.5s infinite;
+    @keyframes rotateRadar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    .glow-text {
+        text-align: center; color: #58a6ff; text-shadow: 0 0 15px #58a6ff;
+        font-weight: 900; letter-spacing: 5px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🛡️ ANTÍDOTO MX")
-st.write("### Consola de Ciberinteligencia y Análisis Forense")
+st.markdown("<h1 class='glow-text'>🛡️ ANTÍDOTO MX</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #8b949e;'>TERMINAL DE INTELIGENCIA Y CONTRAMEDIDAS DIGITALES</p>", unsafe_allow_html=True)
 st.write("---")
 
 # =========================================================
-# 1. MOTOR DE ANÁLISIS
+# 1. LÓGICA DE ESCANEO (BACKEND)
 # =========================================================
 
-def obtener_datos_forenses(url):
+def scan_url(url):
     try:
-        dominio = url.split('//')[-1].split('/')[0]
-        ip = socket.gethostbyname(dominio)
+        dom = url.split('//')[-1].split('/')[0]
+        ip = socket.gethostbyname(dom)
         geo = requests.get(f"http://ip-api.com/json/{ip}", timeout=3).json()
-        
-        protocolo = url.split(':')[0]
-        ssl_warning = ""
-        if protocolo == "https" and (".xyz" in url or ".top" in url):
-             ssl_warning = "⚠️ Certificado SSL sospechoso detectedo (dominio de bajo costo). HTTPS no garantiza legitimidad."
+        return {"ip": ip, "pais": geo.get('country', '??'), "isp": geo.get('isp', 'N/A'), "dom": dom}
+    except: return None
 
-        return {
-            "ip": ip, "pais": geo.get('country', 'Desconocido'),
-            "isp": geo.get('isp', 'Desconocido'), "dominio": dominio,
-            "ssl_warning": ssl_warning
-        }
-    except:
-        return None
-
-def analizar_archivo(nombre):
-    riesgos = {".exe": "Ejecutable", ".scr": "Script de sistema", ".bat": "Archivo de comandos", ".vbs": "Script de Visual Basic"}
-    ext = "." + nombre.split('.')[-1].lower() if '.' in nombre else ""
-    return riesgos.get(ext, "Extensión estándar o desconocida")
-
-def escanear_imagen(imagen_file):
-    """Analiza metadatos EXIF de una imagen para detectar sospechas"""
+def scan_img(img_file):
     try:
-        img = Image.open(imagen_file)
-        exif_data = img._getexif()
-        sospecha = "Baja"
+        img = Image.open(img_file)
+        exif = img._getexif()
         detalles = []
-        
-        if exif_data:
-            for tag_id, value in exif_data.items():
-                tag = TAGS.get(tag_id, tag_id)
-                if tag == 'GPSInfo':
-                    detalles.append("📍 Coordenadas GPS detectadas en los metadatos.")
-                    sospecha = "Media"
-                elif tag == 'DateTimeOriginal':
-                    detalles.append(f"📅 Fecha de captura original: {value}")
-                elif tag == 'Make' or tag == 'Model':
-                    detalles.append(f"📷 Dispositivo: {value}")
-        else:
-            detalles.append("✅ No se detectaron metadatos EXIF críticos.")
-            
-        return sospecha, detalles
-    except Exception as e:
-        return "N/A", [f"Error al analizar la imagen: {e}"]
+        riesgo = "BAJO"
+        if exif:
+            for tid, val in exif.items():
+                tag = TAGS.get(tid, tid)
+                if tag == 'GPSInfo': riesgo = "MEDIO"; detalles.append("📍 GPS Detectado")
+                if tag == 'Model': detalles.append(f"📷 Dispositivo: {val}")
+        return riesgo, detalles
+    except: return "ERROR", []
 
 # =========================================================
-# 2. INTERFAZ PRINCIPAL
+# 2. PANEL DE CONTROL (FRONTEND)
 # =========================================================
-col_radar, col_analisis = st.columns([1, 2])
+col_radar, col_tools = st.columns([1, 2])
 
 with col_radar:
-    st.markdown("#### 🛰️ Radar de Nodos Activo")
     st.markdown("""
     <div class="radar-container">
         <div class="radar-sweep"></div>
-        <div class="radar-threat" style="top: 25%; left: 75%;"></div>
-        <div class="radar-threat" style="top: 65%; left: 25%;"></div>
-        <div class="radar-threat" style="top: 80%; left: 60%; animation-delay: 1s;"></div>
+        <div style="position: absolute; top: 30%; left: 70%; width: 6px; height: 6px; background: red; border-radius: 50%; box-shadow: 0 0 10px red;"></div>
+        <div style="position: absolute; top: 60%; left: 20%; width: 6px; height: 6px; background: red; border-radius: 50%; box-shadow: 0 0 10px red;"></div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("🔴 Nodos externos bajo vigilancia en tiempo real.")
+    st.info("📡 RADAR: Escaneando tráfico de red saliente...")
 
-with col_analisis:
-    st.markdown("#### 🔍 Consola de Rastre Forensic")
+with col_tools:
+    with st.expander("🌐 INVESTIGACIÓN DE ENLACES", expanded=True):
+        url_in = st.text_input("URL Sospechosa:", placeholder="https://ejemplo-fraude.com")
     
-    with st.container():
-        c1, c2 = st.columns(2)
-        url_in = c1.text_input("🔗 Enlace a investigar:", placeholder="URL sospechosa...")
-        file_in = c2.text_input("📁 Archivo a verificar:", placeholder="archivo.exe...")
-        
-    # NUEVA SECCIÓN: SUBIDA DE IMAGEN
-    st.markdown("#### 🖼️ Escáner de Imágenes Forenses")
-    img_in = st.file_uploader("Sube una foto sospechosa para analizar metadatos:", type=['jpg', 'jpeg', 'png'])
+    with st.expander("🖼️ ANÁLISIS FORENSE DE IMÁGENES", expanded=True):
+        img_in = st.file_uploader("Arrastra aquí el archivo:", type=['jpg','png','jpeg'])
 
-    # BOTÓN ÚNICO DE EJECUCIÓN
-    st.write("")
-    if st.button("🚀 EJECUTAR ESCANEO Y ANÁLISIS"):
+    if st.button("⚡ INICIAR PROTOCOLO DE ANÁLISIS"):
         st.write("---")
-        res_col1, res_col2, res_col3 = st.columns(3)
+        r1, r2 = st.columns(2)
         
-        # 1. ANÁLISIS DE URL
-        with res_col1:
-            if url_in:
-                datos = obtener_datos_forenses(url_in)
-                if datos:
-                    st.success(f"Resultados para: {datos['dominio']}")
-                    st.metric("País de Origen", datos['pais'])
-                    st.metric("Dirección IP", datos['ip'])
-                    if datos['ssl_warning']: st.warning(datos['ssl_warning'])
-                    
-                    if "Mexico" not in datos['pais']:
-                        st.error(f"🚨 Alerta: Servidor fuera de México ({datos['pais']}). Riesgo alto.")
+        if url_in:
+            with r1:
+                st.markdown("### 🔍 Resultado Link")
+                res = scan_url(url_in)
+                if res:
+                    st.success(f"DOMINIO: {res['dom']}")
+                    st.metric("UBICACIÓN", res['pais'])
+                    st.metric("IP", res['ip'])
+                    if res['pais'] != "Mexico":
+                        st.error("🚨 SERVIDOR EXTRANJERO DETECTADO")
+                else: st.error("Link no rastreable.")
 
-                    st.session_state['historial'].append({
-                        "Fecha": datetime.now().strftime("%H:%M:%S"),
-                        "Tipo": "URL", "Objetivo": datos['dominio'], "Origen": datos['pais']
-                    })
-
-        # 2. ANÁLISIS DE ARCHIVO
-        with res_col2:
-            if file_in:
-                res_file = analizar_archivo(file_in)
-                st.info(f"Análisis de archivo: {file_in}")
-                if "Ejecutable" in res_file or "Script" in res_file:
-                    st.error(f"🚨 Tipo: {res_file}. Riesgo Crítico.")
-                else:
-                    st.success(f"✅ Tipo: {res_file}.")
-                
-                st.session_state['historial'].append({
-                    "Fecha": datetime.now().strftime("%H:%M:%S"),
-                    "Tipo": "Archivo", "Objetivo": file_in, "Origen": "Local"
-                })
-
-        # 3. ANÁLISIS DE IMAGEN
-        with res_col3:
-            if img_in:
-                sospecha_img, detalles_img = escanear_imagen(img_in)
-                st.info(f"Análisis de imagen: {img_in.name}")
-                st.metric("Nivel de Sospecha", sospecha_img)
-                
-                if sospecha_img == "Media":
-                    st.warning("🚨 Alerta de Metadatos: Se encontraron datos de ubicación.")
-                else:
-                    st.success("✅ Metadatos limpios.")
-                
-                for detalle in detalles_img:
-                    st.caption(detalle)
-                
-                st.session_state['historial'].append({
-                    "Fecha": datetime.now().strftime("%H:%M:%S"),
-                    "Tipo": "Imagen", "Objetivo": img_in.name, "Origen": sospecha_img
-                })
+        if img_in:
+            with r2:
+                st.markdown("### 🖼️ Resultado Imagen")
+                riesgo, datos = scan_img(img_in)
+                st.metric("NIVEL DE RIESGO", riesgo)
+                for d in datos: st.write(d)
+                if not datos: st.write("No se encontraron metadatos ocultos.")
 
 # =========================================================
-# 3. HISTORIAL Y PIE DE PÁGINA
+# 3. FOOTER PROFESIONAL
 # =========================================================
-st.write("---")
-if st.session_state['historial']:
-    st.markdown("#### 📊 Actividad de Sesión Reciente")
-    st.table(pd.DataFrame(st.session_state['historial']).iloc[::-1])
-
 st.write("---")
 f1, f2 = st.columns(2)
 with f1:
-    st.write("🛠️ **Estado:**")
-    annotated_text(("Sistemas", "ONLINE", "#2ea043"), ("Radar", "ACTIVO", "#2ea043"))
+    annotated_text(("SISTEMA", "VIGILANTE", "#1f6feb"), ("FIREWALL", "ACTIVO", "#238636"))
 with f2:
-    st.write("👨‍💻 **Desarrollador:**")
-    st.caption("Maynor | Especialista Independiente en Seguridad Digital")
+    st.markdown(f"<p style='text-align: right; color: #8b949e;'>Desarrollado por <b>Maynor</b> | Especialista en Seguridad</p>", unsafe_allow_html=True)
