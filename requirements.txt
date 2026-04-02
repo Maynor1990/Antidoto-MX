@@ -2,3 +2,4 @@ streamlit
 pandas
 requests
 st-annotated-text
+Pillow
